@@ -1,0 +1,49 @@
+---
+title: "SalaryPredict"
+author: "Graham Itcush"
+date: "24/01/2022"
+output: html_document
+---
+
+```{r}
+datsal <- read.csv("data/datasalaries.csv", stringsAsFactors=TRUE)
+set.seed(763)
+trainindex <- sample(1:nrow(datsal), 4000)
+dstrain <- datsal[trainindex, ]
+dstest <- datsal[-trainindex, ]
+summary(dstrain)
+```
+
+```{r}
+library(tree)
+salrt <- tree(totalyearlycompensation~., data = dstrain)
+plot(salrt)
+text(salrt, pretty = 0)
+```
+
+> I would not like work at Amazon, Microsoft, or Oracle. As with little experience you can make more money working for other companies. (This analysis was to be purely based off the tree, and thus only focusing on maximum salary)
+
+> 10-fold cross validation to see if pruning is needed
+
+```{r}
+set.seed(54561)
+salcv <- cv.tree(salrt)
+plot(salcv, type='b')
+best.val <- salcv$size[which.min(salcv$dev)]
+best.val
+```
+
+> no pruning required
+
+> An Asian female with a PhD and 10 years experiecne who has worked at Google for 5 years
+
+```{r}
+newx <- data.frame(
+company = factor("Google", levels=levels(datsal$company)), # place
+yearsofexperience = 10,
+yearsatcompany = 5,
+gender = factor("Female", levels=levels(datsal$gender)), # gender
+Race = factor("Asian", levels=levels(datsal$Race)), # Race
+Education = factor("PhD", levels=levels(datsal$Education))
+)
+predict(salrt, newdata=newx)
